@@ -1,12 +1,8 @@
-// We no longer need require('node-fetch') because Node 22 has it built-in!
-
 exports.handler = async (event) => {
-    // 1. Secure Credentials from Netlify Environment Variables
     const clientId = process.env.SPOTIFY_CLIENT_ID;
     const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
     const refreshToken = process.env.SPOTIFY_REFRESH_TOKEN;
 
-    // 2. Get a fresh Access Token from Spotify
     const authOptions = {
         method: 'POST',
         headers: {
@@ -22,19 +18,24 @@ exports.handler = async (event) => {
     try {
         const tokenResponse = await fetch('https://accounts.spotify.com/api/token', authOptions);
         const tokenData = await tokenResponse.json();
-        const accessToken = tokenData.access_token;
-
-        if (!accessToken) {
-            return { statusCode: 500, body: JSON.stringify({ error: "Failed to get access token" }) };
+        
+        // If this fails, we want to know EXACTLY what Spotify said
+        if (!tokenData.access_token) {
+            return { 
+                statusCode: 401, 
+                body: JSON.stringify({ 
+                    error: "Spotify rejected the keys", 
+                    details: tokenData 
+                }) 
+            };
         }
 
-        // 3. Handle the request from your website
         const { endpoint, method, body } = JSON.parse(event.body);
 
         const spotifyResponse = await fetch(`https://api.spotify.com${endpoint}`, {
             method: method,
             headers: {
-                'Authorization': `Bearer ${accessToken}`,
+                'Authorization': `Bearer ${tokenData.access_token}`,
                 'Content-Type': 'application/json'
             },
             body: body ? JSON.stringify(body) : null
@@ -48,9 +49,6 @@ exports.handler = async (event) => {
             body: JSON.stringify(result)
         };
     } catch (error) {
-        return {
-            statusCode: 500,
-            body: JSON.stringify({ error: error.message })
-        };
+        return { statusCode: 500, body: JSON.stringify({ error: error.message }) };
     }
 };
