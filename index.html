@@ -24,12 +24,11 @@
         #queue-list li { padding: 10px 0; border-bottom: 1px solid #222; color: #e0e0e0; }
         #queue-list li:last-child { border-bottom: none; }
 
-        /* Confirmation & Loading States */
+        /* Status Animations */
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
-        
         .status-box { border-radius: 12px; padding: 20px; margin: 20px 0; animation: fadeIn 0.3s ease-out; }
-        .loading { border: 2px solid #555; background: rgba(255, 255, 255, 0.05); }
-        .success { border: 2px solid var(--spotify-green); background: rgba(29, 185, 84, 0.1); }
+        .loading { border: 2px solid #444; background: rgba(255, 255, 255, 0.05); }
+        .success { border: 2px solid var(--spotify-green); background: rgba(29, 185, 84, 0.15); }
 
         .admin-btn { position: fixed; bottom: 10px; right: 10px; opacity: 0.2; font-size: 10px; color: white; background: none; border: none; cursor: pointer; }
     </style>
@@ -37,13 +36,13 @@
 <body>
     <div class="container">
         <h1>Be the DJ 🎵</h1>
-        <p style="color:#b3b3b3; margin-top: 0;">Choose a song to play in the car!</p>
+        <p style="color:#b3b3b3; margin-top: 0;">Request a song for the car!</p>
         
         <input type="text" id="search-input" placeholder="Search song or artist...">
         <div id="results"></div>
 
         <div id="queue-preview">
-            <strong style="color: var(--spotify-green); font-size: 1.1em;">Next in the Car:</strong>
+            <strong style="color: var(--spotify-green); font-size: 1.1em;">Up Next:</strong>
             <ul id="queue-list"><li>Waiting for driver to sync...</li></ul>
         </div>
 
