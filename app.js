@@ -1,5 +1,5 @@
 const clientId = '6b1f99f8b96d443ebda9cbd3a234b699';
-const redirectUri = 'https://ishaanjolly.com/songrequest';
+const redirectUri = 'https://jollylegend.github.io/songrequest/';
 
 // --- PKCE & AUTH LOGIC ---
 const generateRandomString = (length) => {
@@ -80,7 +80,8 @@ if (code) {
     }).then(res => res.json()).then(data => {
         localStorage.setItem('access_token', data.access_token);
         localStorage.setItem('refresh_token', data.refresh_token);
-        window.history.replaceState({}, document.title, "/songrequest");
+        // Clear the URL code
+        window.history.replaceState({}, document.title, window.location.pathname);
         updateQueue();
     });
 }
@@ -90,11 +91,17 @@ const searchInput = document.getElementById('search-input');
 searchInput.addEventListener('input', async (e) => {
     if (e.target.value.length < 3) return;
     const token = localStorage.getItem('access_token');
-    const res = await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(e.target.value)}&type=track&limit=5`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-    });
-    const data = await res.json();
-    displayResults(data.tracks.items);
+    if (!token) return;
+    
+    try {
+        const res = await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(e.target.value)}&type=track&limit=5`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        displayResults(data.tracks.items);
+    } catch (err) {
+        console.error("Search failed", err);
+    }
 });
 
 function displayResults(tracks) {
@@ -112,29 +119,45 @@ function displayResults(tracks) {
 
 async function addToQueue(uri) {
     const token = localStorage.getItem('access_token');
-    await fetch(`https://api.spotify.com/v1/me/player/queue?uri=${uri}`, {
+    if (!token) return alert("Driver needs to sync Spotify!");
+
+    const res = await fetch(`https://api.spotify.com/v1/me/player/queue?uri=${uri}`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
     });
-    document.getElementById('results').innerHTML = "✅ Song Requested!";
+
+    if (res.status === 401) {
+        await getRefreshToken();
+        return addToQueue(uri);
+    }
+
+    document.getElementById('results').innerHTML = "<div style='color:var(--spotify-green); padding: 20px;'>✅ Song Requested! It's playing next.</div>";
+    searchInput.value = "";
     setTimeout(updateQueue, 2000);
 }
 
 async function updateQueue() {
     const token = localStorage.getItem('access_token');
     if (!token) return;
+    
     const res = await fetch('https://api.spotify.com/v1/me/player/queue', {
         headers: { 'Authorization': `Bearer ${token}` }
     });
+    
     if (res.status === 401) {
         await getRefreshToken();
         return updateQueue();
     }
+
     const data = await res.json();
-    const list = document.getElementById('queue-list');
-    list.innerHTML = data.queue.slice(0, 5).map(t => `<li>${t.name} - ${t.artists[0].name}</li>`).join('');
+    if (data.queue) {
+        const list = document.getElementById('queue-list');
+        list.innerHTML = data.queue.slice(0, 5).map(t => `<li>${t.name} - ${t.artists[0].name}</li>`).join('');
+    }
 }
 
-// Refresh token every 45 mins
+// Refresh token every 45 mins & update queue every 30 seconds
 setInterval(getRefreshToken, 45 * 60 * 1000);
+setInterval(updateQueue, 30000);
+
 if (localStorage.getItem('access_token')) updateQueue();
