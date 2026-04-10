@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ishaan's Uber DJ Hub</title>
+    <style>
+        :root { --spotify-green: #1DB954; --dark-bg: #121212; --card-bg: #181818; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--dark-bg); color: white; text-align: center; padding: 20px; margin: 0; }
+        .container { max-width: 500px; margin: auto; }
+        h1 { color: var(--spotify-green); margin-bottom: 5px; }
+        input { width: 90%; padding: 15px; border-radius: 30px; border: none; font-size: 16px; margin-bottom: 20px; outline: none; background: #222; color: white; }
+        .song-card { background: var(--card-bg); padding: 10px; margin: 10px 0; border-radius: 8px; display: flex; align-items: center; cursor: pointer; border: 1px solid transparent; transition: 0.2s; }
+        .song-card:hover { border-color: var(--spotify-green); }
+        .song-info { text-align: left; margin-left: 15px; }
+        .song-title { font-weight: bold; display: block; }
+        .song-artist { font-size: 0.8em; color: #b3b3b3; }
+        #queue-preview { margin: 30px 0; padding: 15px; background: #000; border-radius: 10px; text-align: left; }
+        #queue-list { list-style: none; padding: 0; font-size: 0.9em; }
+        #queue-list li { padding: 5px 0; border-bottom: 1px solid #222; }
+        .admin-btn { position: fixed; bottom: 10px; right: 10px; opacity: 0.3; font-size: 10px; color: white; background: none; border: none; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Be the DJ 🎵</h1>
+        <p style="margin-top:0; color:#b3b3b3;">Search a song to play it next!</p>
+        
+        <input type="text" id="search-input" placeholder="Search for a song...">
+        <div id="results"></div>
+
+        <div id="queue-preview">
+            <strong style="color: var(--spotify-green);">Up Next:</strong>
+            <ul id="queue-list"><li>Driver needs to log in...</li></ul>
+        </div>
+
+        <div style="margin-top: 40px;">
+            <h3>Enjoying the ride? ⭐</h3>
+            <script src="https://tiptopjar.com/widget.js" data-username="ishaan" data-mode="inline"></script>
+        </div>
+    </div>
+
+    <button class="admin-btn" onclick="authorize()">Admin Login</button>
+
+    <script src="app.js"></script>
+</body>
+</html>
