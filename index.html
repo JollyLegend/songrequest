@@ -10,29 +10,26 @@
         .container { max-width: 500px; margin: auto; }
         h1 { color: var(--spotify-green); margin-bottom: 5px; }
         
-        /* Search Bar */
         input { width: 90%; padding: 15px; border-radius: 30px; border: none; font-size: 16px; margin-bottom: 20px; outline: none; background: #222; color: white; transition: 0.3s; }
         input:focus { box-shadow: 0 0 10px var(--spotify-green); }
 
-        /* Song Cards */
         .song-card { background: var(--card-bg); padding: 10px; margin: 10px 0; border-radius: 8px; display: flex; align-items: center; cursor: pointer; border: 1px solid transparent; transition: 0.2s; }
         .song-card:active { transform: scale(0.98); background: #282828; }
         .song-info { text-align: left; margin-left: 15px; }
         .song-title { font-weight: bold; display: block; }
         .song-artist { font-size: 0.8em; color: #b3b3b3; }
 
-        /* Queue UI */
         #queue-preview { margin: 30px 0; padding: 15px; background: #000; border-radius: 12px; text-align: left; border: 1px solid #222; }
         #queue-list { list-style: none; padding: 0; font-size: 0.9em; }
         #queue-list li { padding: 10px 0; border-bottom: 1px solid #222; color: #e0e0e0; }
         #queue-list li:last-child { border-bottom: none; }
 
-        /* Animations */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .confirmation-box { background: rgba(29, 185, 84, 0.1); border: 2px solid var(--spotify-green); border-radius: 12px; padding: 20px; margin: 20px 0; animation: fadeIn 0.5s ease-out; }
+        /* Confirmation & Loading States */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .status-box { border-radius: 12px; padding: 20px; margin: 20px 0; animation: fadeIn 0.3s ease-out; }
+        .loading { border: 2px solid #555; background: rgba(255, 255, 255, 0.05); }
+        .success { border: 2px solid var(--spotify-green); background: rgba(29, 185, 84, 0.1); }
 
         .admin-btn { position: fixed; bottom: 10px; right: 10px; opacity: 0.2; font-size: 10px; color: white; background: none; border: none; cursor: pointer; }
     </style>
