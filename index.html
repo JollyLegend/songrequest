@@ -5,80 +5,70 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ishaan's Uber DJ Hub</title>
     <style>
-        :root { --spotify-green: #1DB954; --dark-bg: #121212; --card-bg: #181818; --accent-blue: #00A8E8; }
-        body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: var(--dark-bg); color: white; text-align: center; padding: 20px; margin: 0; }
-        .container { max-width: 480px; margin: auto; }
+        :root { --spotify-green: #1DB954; --dark-bg: #121212; --card-bg: #181818; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--dark-bg); color: white; text-align: center; padding: 20px; margin: 0; }
+        .container { max-width: 450px; margin: auto; }
         
-        /* Profile Header */
-        .profile-header { margin-bottom: 30px; padding: 20px; }
-        .profile-pic { width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--spotify-green); margin-bottom: 10px; }
-        .rating { color: #FFD700; font-size: 1.2em; }
-        
-        /* Info Tiles */
-        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 30px; }
-        .tile { background: var(--card-bg); padding: 15px; border-radius: 12px; border: 1px solid #282828; }
-        .tile-val { font-weight: bold; font-size: 1.1em; display: block; color: var(--spotify-green); }
-        .tile-label { font-size: 0.75em; color: #b3b3b3; text-transform: uppercase; letter-spacing: 1px; }
+        /* Profile Section */
+        .profile-section { margin-top: 30px; margin-bottom: 30px; }
+        .profile-pic { width: 120px; height: 120px; border-radius: 50%; border: 3px solid var(--spotify-green); object-fit: cover; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        .intro-section h1 { font-size: 1.8em; margin: 0 0 5px 0; }
+        .vibe-tag { color: #b3b3b3; font-style: italic; font-size: 0.95em; line-height: 1.4; }
+
+        /* Vibe Cards */
+        .vibe-grid { display: grid; grid-template-columns: 1fr; gap: 15px; margin-bottom: 35px; text-align: left; }
+        .vibe-card { background: var(--card-bg); padding: 18px; border-radius: 15px; border-left: 4px solid var(--spotify-green); }
+        .vibe-card h3 { margin: 0 0 5px 0; font-size: 1.1em; }
+        .vibe-card p { margin: 0; font-size: 0.9em; color: #ccc; }
 
         /* DJ Section */
-        h2 { color: var(--spotify-green); margin-bottom: 15px; font-size: 1.5em; }
-        input { width: 90%; padding: 15px; border-radius: 30px; border: none; font-size: 16px; margin-bottom: 20px; outline: none; background: #222; color: white; }
-        input:focus { box-shadow: 0 0 10px var(--spotify-green); }
-
-        #queue-preview { margin-bottom: 40px; padding: 15px; background: #000; border-radius: 12px; text-align: left; border: 1px solid #222; }
-        #queue-list { list-style: none; padding: 0; font-size: 0.9em; margin: 0; }
-        #queue-list li { padding: 12px 0; border-bottom: 1px solid #222; }
-
-        /* Amenities / Rules */
-        .car-rules { text-align: left; background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; margin-bottom: 40px; }
-        .car-rules ul { padding-left: 20px; margin: 10px 0; color: #ccc; font-size: 0.9em; }
+        .dj-section { background: #000; padding: 20px; border-radius: 20px; border: 1px solid #222; margin-bottom: 40px; }
+        input { width: 90%; padding: 15px; border-radius: 30px; border: none; font-size: 16px; margin-bottom: 20px; outline: none; background: #222; color: white; border: 1px solid transparent; }
+        input:focus { border: 1px solid var(--spotify-green); }
+        
+        #queue-list { list-style: none; padding: 0; font-size: 0.9em; text-align: left; margin-top: 10px; }
+        #queue-list li { padding: 10px 0; border-bottom: 1px solid #222; color: #888; }
 
         /* Tip Jar */
-        .kofi-container { border-radius: 15px; overflow: hidden; border: 1px solid #333; background: #fff; margin-bottom: 50px;}
+        .kofi-container { border-radius: 15px; overflow: hidden; border: 1px solid #333; background: #fff; margin-bottom: 60px;}
 
-        .admin-btn { position: fixed; bottom: 10px; right: 10px; opacity: 0.05; font-size: 8px; color: white; background: none; border: none; }
+        .admin-btn { position: fixed; bottom: 10px; right: 10px; opacity: 0; pointer-events: none; }
     </style>
 </head>
 <body>
     <div class="container">
         
-        <div class="profile-header">
-            <img src="YOUR_PHOTO_URL_HERE" alt="Ishaan" class="profile-pic">
-            <h1 style="margin:0;">Hey, I'm Ishaan 👋</h1>
-            <div class="rating">★★★★★ <span style="font-size: 0.7em; color: white; opacity: 0.8;">(5.0 Driver)</span></div>
-        </div>
-
-        <div class="info-grid">
-            <div class="tile">
-                <span class="tile-val">AC & Aux</span>
-                <span class="tile-label">Comfort</span>
-            </div>
-            <div class="tile">
-                <span class="tile-val">Charging</span>
-                <span class="tile-label">Cables in Back</span>
+        <div class="profile-section">
+            <img src="profile.jpg" alt="Ishaan" class="profile-pic">
+            <div class="intro-section">
+                <h1>Hi, I’m Ishaan ^_^</h1>
+                <p class="vibe-tag">I’ll stay quiet by default so you can relax.</p>
             </div>
         </div>
 
-        <h2>Be the DJ 🎵</h2>
-        <input type="text" id="search-input" placeholder="Search song or artist...">
-        <div id="results"></div>
-
-        <div id="queue-preview">
-            <strong style="color: var(--spotify-green);">Up Next:</strong>
-            <ul id="queue-list"><li>Waiting for sync...</li></ul>
+        <div class="vibe-grid">
+            <div class="vibe-card">
+                <h3>Want to sing along? 🎶</h3>
+                <p>Feel free to request songs and even sing along! If I know the lyrics, I’m happy to join in.</p>
+            </div>
+            <div class="vibe-card">
+                <h3>Volume or Temp? 🌡️</h3>
+                <p>Just ask, I’ll adjust. I want you to be as comfortable as possible.</p>
+            </div>
         </div>
 
-        <div class="car-rules">
-            <strong style="color: var(--accent-blue);">Car Vibes:</strong>
-            <ul>
-                <li>Feel free to adjust the AC!</li>
-                <li>Water available in the door pockets.</li>
-                <li>Please don't slam the doors (they're sensitive!)</li>
-                <li>Enjoy the ride & the music.</li>
-            </ul>
+        <div class="dj-section">
+            <h2 style="margin-top:0; font-size: 1.3em; color: var(--spotify-green);">Be the DJ</h2>
+            <input type="text" id="search-input" placeholder="Search for a song...">
+            <div id="results"></div>
+
+            <div style="text-align: left; margin-top: 20px;">
+                <small style="color: var(--spotify-green); font-weight: bold; text-transform: uppercase;">Playing Next:</small>
+                <ul id="queue-list"><li>Syncing with car...</li></ul>
+            </div>
         </div>
 
-        <h3 style="margin-bottom: 15px;">Enjoying the ride? ⭐</h3>
+        <h3 style="margin-bottom: 15px;">Enjoyed the ride? ⭐</h3>
         <div class="kofi-container">
             <iframe id='kofiframe' src='https://ko-fi.com/ishaanjolly/?hidefeed=true&widget=true&embed=true&preview=true' style='border:none;width:100%;padding:4px;' height='712' title='ishaanjolly'></iframe>
         </div>
