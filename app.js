@@ -50,9 +50,15 @@ async function refreshAccessToken() {
 
 async function fetchSpotify(endpoint, method = 'GET', body = null) {
     let token = localStorage.getItem('access_token');
+    if (!token) return null;
+
     const f = async (t) => fetch(`https://api.spotify.com/v1${endpoint}`, { method, headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : null });
+    
     let res = await f(token);
     if (res.status === 401) { token = await refreshAccessToken(); if (token) res = await f(token); }
+    
+    // Return the full response for 'POST' so we can check status codes
+    if (method === 'POST') return res;
     return res.status === 204 ? null : await res.json();
 }
 
@@ -82,7 +88,7 @@ function displayResults(tracks) {
     }).join('');
 }
 
-// --- INSTANT FEEDBACK QUEUEING ---
+// --- UPDATED ADD TO QUEUE LOGIC ---
 async function addToQueue(uri, songName) {
     const now = Date.now();
     const resultsDiv = document.getElementById('results');
@@ -94,36 +100,41 @@ async function addToQueue(uri, songName) {
         return; 
     }
 
-    // STEP 1: SHOW INSTANT LOADING MESSAGE
+    // Step 1: Immediate Loading State
     resultsDiv.innerHTML = `
         <div class="status-box loading">
-            <h3 style="margin: 0; color: #b3b3b3;">Sending to car... 📡</h3>
+            <h3 style="margin: 0; color: #b3b3b3;">Connecting to car... 📡</h3>
             <p style="margin: 5px 0 0 0; font-size: 0.8em;">Requesting ${songName}</p>
         </div>
     `;
     if (searchInput) searchInput.value = "";
 
-    // STEP 2: RUN THE BACKGROUND API CALL
     try {
-        await fetchSpotify(`/me/player/queue?uri=${encodeURIComponent(uri)}`, 'POST');
-        addHistory[uri] = now;
-
-        // STEP 3: SHOW SUCCESS MESSAGE
-        resultsDiv.innerHTML = `
-            <div class="status-box success">
-                <h3 style="margin: 0; color: var(--spotify-green);">Success! 🎧</h3>
-                <p style="margin: 5px 0 0 0; font-size: 0.9em;"><strong>${songName}</strong> added to queue.</p>
-            </div>
-        `;
+        const response = await fetchSpotify(`/me/player/queue?uri=${encodeURIComponent(uri)}`, 'POST');
+        
+        // Step 2: Optimistic Success Check
+        // Spotify returns 204 or 200 for a successful queue add
+        if (response && (response.status === 204 || response.status === 200)) {
+            addHistory[uri] = now;
+            resultsDiv.innerHTML = `
+                <div class="status-box success">
+                    <h3 style="margin: 0; color: var(--spotify-green);">Success! 🎧</h3>
+                    <p style="margin: 5px 0 0 0; font-size: 0.9em;"><strong>${songName}</strong> added to queue.</p>
+                </div>
+            `;
+        } else {
+            throw new Error("Invalid response");
+        }
     } catch (err) {
-        resultsDiv.innerHTML = `<div class="status-box loading">❌ Failed to add. Try again.</div>`;
+        // Fallback: If it's a 204 it actually worked, if it's a real error, show it
+        resultsDiv.innerHTML = `<div class="status-box loading">❌ Not playing on Spotify. Make sure the driver hits play!</div>`;
     }
 
-    // STEP 4: CLEANUP
+    // Step 3: Wait 4 seconds before clearing and updating the list
     setTimeout(() => {
         resultsDiv.innerHTML = "";
-        updateQueue();
-    }, 4000);
+        updateQueue(); 
+    }, 4500);
 }
 
 async function updateQueue() {
