@@ -1,77 +1,98 @@
 const clientId = '6b1f99f8b96d443ebda9cbd3a234b699';
 const clientSecret = '1ccfd8f5d6a44e3da62892c7daf2ed32';
-// PASTE YOUR NEW REFRESH TOKEN HERE ONCE YOU GET IT
+const redirectUri = 'https://jollylegend.github.io/songrequest/';
+
+// --- PASTE NEW REFRESH TOKEN HERE ---
 const permanentRefreshToken = "AQBfB8oQJDzX8Sj9jQqX7LsWAKBfY_9LDmYUNAoCeZoenXJeaOskKvKmrJcmcIhtUdcF7aVI1_XI2u__6yyHXrLMFrllVyExB1gAlasr3ztFzPAaEhvNoUjzGiQHTaAAdgE"; 
 
-// 1. RESTORED ADMIN LOGIN BUTTON
+// --- 1. PKCE LOGIN LOGIC (To get your new token) ---
 async function authorize() {
-    const scopes = 'user-modify-playback-state user-read-playback-state';
-    // Using Implicit Grant for the button because it's the easiest way for you to grab a token from the URL/Storage
-    const authUrl = `https://accounts.spotify.com/authorize?response_type=token&client_id=${clientId}&scope=${encodeURIComponent(scopes)}&redirect_uri=${encodeURIComponent('https://jollylegend.github.io/songrequest/')}`;
-    window.location.href = authUrl;
-}
-
-// 2. TOKEN MANAGEMENT
-async function getAccessToken() {
-    // If we have a token in the URL (just logged in), use it!
-    const hash = window.location.hash.substring(1).split('&').reduce((initial, item) => {
-        if (item) { var parts = item.split('='); initial[parts[0]] = decodeURIComponent(parts[1]); }
-        return initial;
-    }, {});
-    
-    if (hash.access_token) {
-        localStorage.setItem('access_token', hash.access_token);
-        window.location.hash = "";
-        return hash.access_token;
+    const generateRandomString = (length) => {
+        const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        const values = crypto.getRandomValues(new Uint8Array(length));
+        return values.reduce((acc, x) => acc + possible[x % possible.length], "");
+    }
+    const sha256 = async (plain) => {
+        const encoder = new TextEncoder();
+        const data = encoder.encode(plain);
+        return window.crypto.subtle.digest('SHA-256', data);
+    }
+    const base64encode = (input) => {
+        return btoa(String.fromCharCode.apply(null, new Uint8Array(input)))
+            .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
     }
 
-    const cachedToken = localStorage.getItem('access_token');
-    if (cachedToken) return cachedToken;
+    const codeVerifier = generateRandomString(64);
+    const hashed = await sha256(codeVerifier);
+    const codeChallenge = base64encode(hashed);
+    window.localStorage.setItem('code_verifier', codeVerifier);
 
-    // Fallback to Refresh Token
-    const url = "https://accounts.spotify.com/api/token";
-    const basicAuth = btoa(`${clientId}:${clientSecret}`);
-    const payload = new URLSearchParams({
-        grant_type: 'refresh_token',
-        refresh_token: permanentRefreshToken
+    const params = new URLSearchParams({
+        response_type: 'code',
+        client_id: clientId,
+        scope: 'user-modify-playback-state user-read-playback-state',
+        code_challenge_method: 'S256',
+        code_challenge: codeChallenge,
+        redirect_uri: redirectUri,
     });
 
-    const response = await fetch(url, {
+    window.location.href = `https://accounts.spotify.com/authorize?${params.toString()}`;
+}
+
+// --- 2. HANDLE AUTH REDIRECT ---
+const urlParams = new URLSearchParams(window.location.search);
+let code = urlParams.get('code');
+if (code) {
+    const codeVerifier = localStorage.getItem('code_verifier');
+    fetch("https://accounts.spotify.com/api/token", {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+            client_id: clientId,
+            grant_type: 'authorization_code',
+            code: code,
+            redirect_uri: redirectUri,
+            code_verifier: codeVerifier,
+        }),
+    }).then(res => res.json()).then(data => {
+        if(data.refresh_token) {
+            localStorage.setItem('refresh_token', data.refresh_token);
+            alert("SUCCESS! Copy the refresh_token from Application Tab -> Local Storage");
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+    });
+}
+
+// --- 3. ALWAYS-ON AUTH ---
+async function getAccessToken() {
+    const refreshToken = localStorage.getItem('refresh_token') || permanentRefreshToken;
+    const basicAuth = btoa(`${clientId}:${clientSecret}`);
+    
+    const response = await fetch("https://accounts.spotify.com/api/token", {
         method: 'POST',
         headers: { 
             'Authorization': `Basic ${basicAuth}`,
             'Content-Type': 'application/x-www-form-urlencoded' 
         },
-        body: payload
+        body: new URLSearchParams({ grant_type: 'refresh_token', refresh_token: refreshToken })
     });
 
     const data = await response.json();
-    if (data.access_token) {
-        localStorage.setItem('access_token', data.access_token);
-        return data.access_token;
-    }
-    return null;
+    return data.access_token;
 }
 
-// 3. API WRAPPER
+// --- 4. API CALLS ---
 async function fetchWebApi(endpoint, method, body = null) {
     const token = await getAccessToken();
-    if (!token) return;
-
     const res = await fetch(`https://api.spotify.com/${endpoint}`, {
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
         method,
         body: body ? JSON.stringify(body) : null
     });
-
-    if (res.status === 401) {
-        localStorage.removeItem('access_token');
-        return fetchWebApi(endpoint, method, body);
-    }
     return res.status === 204 ? null : await res.json();
 }
 
-// 4. SEARCH & RESULTS
+// --- 5. SEARCH & QUEUE ---
 const searchInput = document.getElementById('search-input');
 if(searchInput) {
     searchInput.addEventListener('input', async (e) => {
@@ -85,7 +106,7 @@ function displayResults(tracks) {
     const resultsDiv = document.getElementById('results');
     resultsDiv.innerHTML = tracks.map(track => `
         <div class="song-card" onclick="addToQueue('${track.uri}')">
-            <img src="${track.album.images[2].url}" width="40" style="border-radius:4px;">
+            <img src="${track.album.images[2].url}" width="40">
             <div class="song-info">
                 <span class="song-title">${track.name}</span>
                 <span class="song-artist">${track.artists[0].name}</span>
@@ -94,24 +115,23 @@ function displayResults(tracks) {
     `).join('');
 }
 
-// 5. QUEUE LOGIC
 async function addToQueue(uri) {
     await fetchWebApi(`v1/me/player/queue?uri=${encodeURIComponent(uri)}`, 'POST');
-    document.getElementById('results').innerHTML = "<div style='color:#1DB954; padding: 20px; font-weight:bold;'>✅ Requested!</div>";
-    if(searchInput) searchInput.value = "";
+    document.getElementById('results').innerHTML = "<div style='color:var(--spotify-green); padding:20px;'>✅ Added to queue!</div>";
+    searchInput.value = "";
     setTimeout(updateQueue, 2000);
 }
 
 async function updateQueue() {
     const data = await fetchWebApi('v1/me/player/queue', 'GET');
+    const list = document.getElementById('queue-list');
     if (data && data.queue) {
-        const list = document.getElementById('queue-list');
         list.innerHTML = data.queue.slice(0, 5).map(t => `<li>${t.name} - ${t.artists[0].name}</li>`).join('');
     } else {
-        document.getElementById('queue-list').innerHTML = "<li>Driver is not playing music.</li>";
+        list.innerHTML = "<li>Connect Spotify to see queue.</li>";
     }
 }
 
-// Initialize
-updateQueue();
+// Update queue every 30 seconds
 setInterval(updateQueue, 30000);
+updateQueue();
